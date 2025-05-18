@@ -56,10 +56,10 @@ if (Test-Path $exeFolder) {
 }
 
 # --- Step 3: Create a local admin account ---
-Write-Host "Enter username for new local admin account (default: LocalAdmin):"
+Write-Host "Enter username for new local admin account (default: default):"
 $Username = Read-Host
 if ([string]::IsNullOrWhiteSpace($Username)) {
-    $Username = "LocalAdmin"
+    $Username = "default"
 }
 Write-Host "Enter password for $Username (leave blank for no password):"
 $Password = Read-Host -AsSecureString
@@ -79,7 +79,23 @@ if (-not (Get-LocalUser -Name $Username -ErrorAction SilentlyContinue)) {
     Write-Host "User $Username already exists."
 }
 
-# --- Step 4: Display summary ---
+# --- Step 4: Copy files from 'system' folder to user profile if exists ---
+$systemFolder = Join-Path $scriptFolder "system"
+if (Test-Path $systemFolder) {
+    $userProfile = "C:\Users\$Username"
+    $folders = Get-ChildItem -Path $systemFolder -Directory
+    foreach ($folder in $folders) {
+        $targetFolder = Join-Path $userProfile $folder.Name
+        if (!(Test-Path $targetFolder)) {
+            New-Item -Path $targetFolder -ItemType Directory -Force | Out-Null
+        }
+        Log "Copying contents of $($folder.FullName) to $targetFolder"
+        Copy-Item -Path (Join-Path $folder.FullName "*") -Destination $targetFolder -Recurse -Force
+    }
+    Log "Finished copying user files from 'system' folder."
+}
+
+# --- Step 5: Display summary ---
 Write-Host "`n--- Setup Summary ---"
 Write-Host "System reset: $doReset"
 Write-Host "Installed .exe files:"
