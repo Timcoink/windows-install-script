@@ -20,6 +20,8 @@ $doReset = Read-Host
 if ($doReset -eq 'Y') {
     Log "User chose to reset the PC."
     Write-Host "About to reset this PC. This will remove all apps and settings."
+    Write-Host "Choose reset type: Local (L) or Cloud (C)? (L/C)"
+    $resetType = Read-Host
     Write-Host "Press Y to continue or any other key to abort."
     $input = Read-Host
     if ($input -ne 'Y') {
@@ -27,10 +29,28 @@ if ($doReset -eq 'Y') {
         Write-Host "Aborted."
         exit
     }
-    Log "Initiating system reset."
-    systemreset -factoryreset
+    if ($resetType -eq 'C') {
+        Log "Initiating system reset (Cloud Download)."
+        systemreset -factoryreset -cloud
+    } else {
+        Log "Initiating system reset (Local reinstall)."
+        systemreset -factoryreset
+    }
 } else {
     Log "User skipped system reset."
+    Write-Host "Do you want to quit (Q) or continue with app and file installation (C)? (Q/C)"
+    $nextStep = Read-Host
+    if ($nextStep -eq 'Q') {
+        Log "User chose to quit after skipping reset."
+        Write-Host "Exiting script."
+        exit
+    } elseif ($nextStep -eq 'C') {
+        Log "User chose to continue with app and file installation."
+    } else {
+        Log "Invalid input after skipping reset. Exiting."
+        Write-Host "Invalid input. Exiting script."
+        exit
+    }
 }
 
 # --- Step 2: Install all .exe files in the same folder as this script ---
